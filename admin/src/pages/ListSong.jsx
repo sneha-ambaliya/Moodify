@@ -1,6 +1,5 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { url } from "../App";
+import api from "../utils/api";
 import { toast } from "react-toastify";
 
 const ListSong = () => {
@@ -13,18 +12,14 @@ const ListSong = () => {
   const [album, setAlbum] = useState("none");
   const [mood, setMood] = useState("happy");
 
-  // previews + new files
-  // const [previewImage, setPreviewImage] = useState(null);
-  // const [previewAudio, setPreviewAudio] = useState(null);
   const [image, setImage] = useState(null);
   const [songFile, setSongFile] = useState(null);
-
   const [loading, setLoading] = useState(false);
 
   // Fetch all songs
   const fetchSongs = async () => {
     try {
-      const res = await axios.get(`${url}/api/song/list`);
+      const res = await api.get("/song/list");
       if (res.data.success) {
         setData(res.data.songs);
       }
@@ -37,7 +32,7 @@ const ListSong = () => {
   // Remove song
   const removeSong = async (id) => {
     try {
-      const res = await axios.post(`${url}/api/song/remove`, { id });
+      const res = await api.post("/song/remove", { id });
       if (res.data.success) {
         toast.success(res.data.message);
         fetchSongs();
@@ -56,21 +51,18 @@ const ListSong = () => {
     setAlbum(song.album || "none");
     setMood(song.mood || "happy");
 
-    // setPreviewImage(song.image || null);
-    // setPreviewAudio(song.audio || null);
-
     setImage(null);
     setSongFile(null);
-
     setShowForm(true);
   };
 
-  // Update Song (uses PUT /update/:id)
+  // Update Song
   const updateSong = async (e) => {
     e.preventDefault();
     if (!editingSong) return;
 
     setLoading(true);
+
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -81,8 +73,8 @@ const ListSong = () => {
       if (image) formData.append("image", image);
       if (songFile) formData.append("audio", songFile);
 
-      const res = await axios.put(
-        `${url}/api/song/update/${editingSong._id}`,
+      const res = await api.put(
+        `/song/update/${editingSong._id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -98,6 +90,7 @@ const ListSong = () => {
       toast.error("Error updating song");
       console.error(error);
     }
+
     setLoading(false);
   };
 
@@ -109,7 +102,6 @@ const ListSong = () => {
     <div>
       <p className="font-bold text-lg mb-3">All Songs List</p>
 
-      {/* Header Row */}
       <div className="sm:grid hidden grid-cols-[0.5fr_1fr_2fr_1fr_1fr] items-center gap-2.5 p-3 border border-gray-300 text-sm mr-5 bg-gray-100">
         <b>Image</b>
         <b>Name</b>
@@ -118,7 +110,6 @@ const ListSong = () => {
         <b>Action</b>
       </div>
 
-      {/* Songs List */}
       {data.map((item, index) => (
         <div
           key={index}
@@ -128,6 +119,7 @@ const ListSong = () => {
           <p>{item.name}</p>
           <p>{item.album}</p>
           <p>{item.duration}</p>
+
           <div className="flex gap-2">
             <button
               className="bg-blue-500 text-white px-2 py-1 rounded"
@@ -135,6 +127,7 @@ const ListSong = () => {
             >
               Edit
             </button>
+
             <p
               className="cursor-pointer text-red-500"
               onClick={() => removeSong(item._id)}
@@ -145,9 +138,8 @@ const ListSong = () => {
         </div>
       ))}
 
-      {/* Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-[#F3FFF7]  bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-[#F3FFF7] flex justify-center items-center">
           <form
             onSubmit={updateSong}
             className="bg-white p-6 rounded-md flex flex-col gap-4 w-[400px] border border-black"
@@ -162,6 +154,7 @@ const ListSong = () => {
               required
               className="border p-2"
             />
+
             <input
               type="text"
               value={desc}
@@ -170,6 +163,7 @@ const ListSong = () => {
               required
               className="border p-2"
             />
+
             <input
               type="text"
               value={album}
@@ -177,6 +171,7 @@ const ListSong = () => {
               placeholder="Album"
               className="border p-2"
             />
+
             <select
               value={mood}
               onChange={(e) => setMood(e.target.value)}
@@ -189,32 +184,6 @@ const ListSong = () => {
               <option value="surprised">surprised</option>
             </select>
 
-            {/* Image Upload + Preview
-            {previewImage && !image && (
-              <img src={previewImage} alt="preview" className="w-16" />
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                setImage(e.target.files[0]);
-                setPreviewImage(URL.createObjectURL(e.target.files[0]));
-              }}
-            /> */}
-
-           
-            {/* {previewAudio && !songFile && (
-              <audio controls src={previewAudio}></audio>
-            )}
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => {
-                setSongFile(e.target.files[0]);
-                setPreviewAudio(URL.createObjectURL(e.target.files[0]));
-              }}
-            /> */}
-
             <div className="flex justify-between mt-4">
               <button
                 type="submit"
@@ -222,6 +191,7 @@ const ListSong = () => {
               >
                 {loading ? "Updating..." : "Update"}
               </button>
+
               <button
                 type="button"
                 className="bg-gray-500 text-white px-4 py-2 rounded"
