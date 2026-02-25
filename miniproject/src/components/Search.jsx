@@ -1,12 +1,11 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
+import api from "../utils/api";
 
 function Search() {
   const [query, setQuery] = useState("");
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // this function will call the API whenever query changes
   useEffect(() => {
     const fetchSongs = async () => {
       if (!query.trim()) {
@@ -15,23 +14,24 @@ function Search() {
       }
 
       setLoading(true);
+
       try {
-        const res = await axios.get(`http://localhost:4000/api/song/search?q=${query}`);
+        const res = await api.get(`/song/search?q=${query}`);
+
         if (res.data.success) {
           setSongs(res.data.data);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Search error:", err);
       }
+
       setLoading(false);
     };
 
-    // Debounce logic: wait 500ms before calling API
     const delayDebounce = setTimeout(() => {
       fetchSongs();
     }, 500);
 
-    // cleanup to cancel old requests if typing continues
     return () => clearTimeout(delayDebounce);
   }, [query]);
 
@@ -50,15 +50,32 @@ function Search() {
       <div className="mt-4 space-y-3">
         {songs.length > 0 ? (
           songs.map((song) => (
-            <div key={song._id} className="border p-3 rounded-lg shadow-sm">
-              <img src={song.image} alt={song.name} className="w-16 h-16 rounded-md mb-2" />
+            <div
+              key={song._id}
+              className="border p-3 rounded-lg shadow-sm"
+            >
+              <img
+                src={song.image}
+                alt={song.name}
+                className="w-16 h-16 rounded-md mb-2"
+              />
+
               <h3 className="font-semibold">{song.name}</h3>
-              <p className="text-sm text-gray-500">{song.album} • {song.mood}</p>
-              <audio controls src={song.file} className="mt-2 w-full h-10"></audio>
+
+              <p className="text-sm text-gray-500">
+                {song.album} • {song.mood}
+              </p>
+
+              <audio
+                controls
+                src={song.file}
+                className="mt-2 w-full h-10"
+              />
             </div>
           ))
         ) : (
-          !loading && query && <p>No songs found </p>
+          !loading &&
+          query && <p>No songs found</p>
         )}
       </div>
     </div>
